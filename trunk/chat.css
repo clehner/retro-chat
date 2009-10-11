@@ -6,6 +6,7 @@
 	right: 0;
 	margin: 0;
 	font: 13px Arial, sans-serif;
+	border: 1px solid black;
 }
 #messages {
 	position: absolute;
@@ -16,8 +17,20 @@
 	margin: 0;
 	overflow: auto;
 	padding-bottom: .5em;
-	border: 1px solid black;
 }
+#input {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 22px;
+	width: 100%;
+	display: block;
+	padding: 0;
+	border: none;
+	border-top: 1px solid black;
+}
+
 .message img {
 	width: 1em;
 	max-height: 1em;
@@ -27,16 +40,4 @@
 	padding: 0 .4em;
 	font-weight: bold;
 	color: gray;
-}
-
-#input {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	height: 22px;
-	width: 100%;
-	display: block;
-	border: 1px solid black;
-	border-top-style: none;
 }
