@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
 	<ModulePrefs
-		title="Chat"
+		title="Retro Chat"
 		height="200"
-		description="A chat room in a wave."
+		description="A chat room Wave gadget for old-fashioned IM chatting."
 		author="Charles Lehner"
 		author_email="celehner1@gmail.com">
 	 <Require feature="wave"/>
