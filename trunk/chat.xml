@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+	<ModulePrefs
+		title="Chat"
+		height="200"
+		description="A chat room in a wave."
+		author="Charles Lehner"
+		author_email="celehner1@gmail.com">
+	 <Require feature="wave"/>
+	</ModulePrefs>
+
+	<Content type="html">
+	<![CDATA[
+	
+	<script type="text/javascript"
+		src="http://wave-api.appspot.com/public/wave.js"></script>
+	<script type="text/javascript"
+		src="http://wave-retro-chat.googlecode.com/svn/trunk/chat.js"></script>
+	<link rel="stylesheet" type="text/css"
+		href="http://wave-retro-chat.googlecode.com/svn/trunk/chat.css"/>
+	
+	<form id="container">
+		<div id="messages"></div>
+		<input id="input" />
+	</form>
+	
+	]]></Content>
+</Module>
