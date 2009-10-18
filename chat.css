@@ -7,6 +7,7 @@
 	margin: 0;
 	font: 13px Arial, sans-serif;
 	border: 1px solid black;
+	background: white;
 }
 #messages {
 	position: absolute;
@@ -16,7 +17,7 @@
 	right: 0;
 	margin: 0;
 	overflow: auto;
-	padding-bottom: .5em;
+	padding: .4em;
 }
 #input {
 	position: absolute;
@@ -29,15 +30,29 @@
 	padding: 0;
 	border: none;
 	border-top: 1px solid black;
+	font: 13px Arial, sans-serif;
 }
-
+.message {
+	/*min-height: 27px;*/
+}
+.status {
+	font-style: oblique;
+}
 .message img {
+	/*width: 27px;
+	height: 27px;
+	float: left;*/
 	width: 1em;
-	max-height: 1em;
-	margin: 0 .3em;
+	height: 1em;
+	margin-right: 5px;
 }
 .message span {
-	padding: 0 .4em;
+	margin-right: .4em;
 	font-weight: bold;
 	color: gray;
+}
+.time, .date {
+	color: gray;
+	font-size: small;
+	text-align: center;
 }

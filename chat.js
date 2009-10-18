@@ -1,84 +1,198 @@
+/*
+Retro Chat
+A chat room Google Wave gadget.
+
+Copyright (c) 2009 Charles Lehner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+*/
 
 var
-	state,    // wave state
-	viewerId, // id of the viewing participant
-	participantsLoaded = false,
-
-	messages = [],        // array of message objects
-	messagesReceived = {}, // keys of received messages
+	state,                 // Wave state
+	viewerId,              // Id of the viewing participant
+	participantsLoaded = false, // Has the first participant update been called
+	chatParticipants = {}, // Participants that are marked in the wave state as
+	                       // being in the chat.
+	messages = [],         // Array of message objects
+	messagesReceived = {}, // keys of recieved messages
 
 	formEl,
 	messagesEl,
 	inputEl;
 
-function sendMessage() {
-	var msg, key, value, obj;
+
+// send a message object
+function sendMessage(msg) {
 	
-	msg = inputEl.value.replace(/^\s+/, '').replace(/\s+$/, ''); // trim
+	// make a unique key with a timestamp and a rand
+	var key = +new Date + "." + (~~(Math.random() * 9000) + 1000);
+
+	var obj = {};
+	obj[key] = JSON.stringify(msg);
+	state.submitDelta(obj);
+}
+
+function sendChatMessage() {
+	// trim the message
+	var msg = inputEl.value.replace(/^\s+/, '').replace(/\s+$/, '');
 	if (msg) {
-	
-		// make a unique key with a timestamp and a rand
-		key = +new Date + "." + (~~(Math.random() * 9000) + 1000);
-		value = {
-			from: viewerId,
+		sendMessage({
+			p: viewerId,
 			msg: msg
-		};
-		
-		obj = {};
-		obj[key] = JSON.stringify(value);
-		wave.getState().submitDelta(obj);
-		
-		inputEl.value = "";
+		});
 	}
+	
+	// reset the input box
+	inputEl.value = "";
 	return false;
 }
+
+function sendEntrance(pid) {
+	// add the marker for the participant's presence in the chat
+	var obj = {};
+	obj["p_" + pid] = "1";
+	state.submitDelta(obj);
 	
-function insertMessage(msg) {
-	var sender, name, msgEl, thumbEl, nameEl, i, l;
+	// add a message for the participant's entrance.
+	sendMessage({
+		p: pid,
+		enter: true
+	});
+}
+
+function sendExit(pid) {
+	// remove the participant from the state
+	var obj = {};
+	obj["p_" + pid] = null;
+	state.submitDelta(obj);
+	
+	delete chatParticipants[pid];
+
+	// add a message for their exit.
+	sendMessage({
+		p: pid,
+		exit: true
+	});
+}
+
+function renderMessage(msg) {
+	var pid, sender, name, title, msgEl, nameEl, text1, text2, name2, i, l,
+		prevMsg, timeEl, timeStr;
 	
 	// record receiving this message, so it is not re-rendered.
 	messagesReceived[msg.key] = true;
 	
 	// build dom nodes for message
-	if ("from" in msg) {
-		sender = wave.getParticipantById(msg.from);
-		name = sender ? ((msg.from === viewerId) ? "me" :
-			sender.getDisplayName()) : msg.from;
+	pid = msg.p;
+	if (pid !== undefined) {
+		sender = wave.getParticipantById(pid);
+		if (sender) {
+			if (pid === viewerId) {
+				name = "me";
+			} else {
+				name = sender.getDisplayName();
+			}
+		} else {
+			name = pid;
+		}
 	} else {
 		name = "?";
 	}
-
-	msgEl = msg.div = document.createElement("div");
-	msgEl.className = "message";
-	msgEl.title = msg.time;
 	
-	/*thumbEl = document.createElement("img");
+	name2 = name + " (" + pid + ")";
+	title = name2 + " on " + msg.time.toLocaleString();
+
+	msgEl = document.createElement("div");
+	msgEl.title = title;
+	msgEl.className = "message";
+	
+	msg.div = document.createElement("div");
+	msg.div.appendChild(msgEl);
+	
+	thumbEl = document.createElement("img");
 	thumbEl.src = sender ? sender.getThumbnailUrl() :
 		"https://wave.google.com/wave/static/images/unknown.gif";
-	msgEl.appendChild(thumbEl);*/
+	msgEl.appendChild(thumbEl);
 	
+	if (msg.msg) {
+		text1 = name + ":";
+		text2 = msg.msg;
+	} else if (msg.enter) {
+		text1 = name2 + " entered.";
+		msgEl.className += " status";
+	} else if (msg.exit) {
+		text1 = name + " exited.";
+		msgEl.className += " status";
+	}
+		
 	nameEl = document.createElement("span");
-	nameEl.appendChild(document.createTextNode(name + ":"));
+	nameEl.appendChild(document.createTextNode(text1));
 	msgEl.appendChild(nameEl);
 	
-	msgEl.appendChild(document.createTextNode(msg.msg));
-
+	if (text2) {
+		msgEl.appendChild(document.createTextNode(text2));
+	}
+	
 	// find the last message older than this one
 	l = messages.length;
 	i = l;
-	while (i && (messages[i-1].time > msg.time)) {
+	prevMsg = messages[i-1];
+	while (i && (prevMsg.time > msg.time)) {
 		i--;
+		prevMsg = messages[i];
 	}
 	
 	if (i == l) {
 		// message is newer than all the rest; insert it at the end.
 		messages[i] = msg;
-		messagesEl.appendChild(msgEl);
+		messagesEl.appendChild(msg.div);
 		
 	} else {
-		// insert message in the middle at i
+		// insert message in the middle of the page, before message i
 		messages.splice(i, msg, 0);
-		messagesEl.insertBefore(msgEl, messages[i].div);
+		messagesEl.insertBefore(msg.div, messages[i].div);
+	}
+	
+	// timestamp if more than 5 minutes passed since the last message.
+	updateTime = (!prevMsg || (msg.time - prevMsg.time > 5*60*1000));
+	// datestamp if it is a different day than the last message.
+	updateDate = (!prevMsg || (msg.time.toDateString() != prevMsg.time.toDateString()));
+	
+	if (updateTime) {
+		if (updateDate) {
+			// both date and time stamp
+			timeStr = msg.time.toLocaleString();
+		} else {
+			timeStr = msg.time.toLocaleTimeString();
+		}
+		timeEl = document.createElement("div");
+		timeEl.className = "time status message";
+		timeEl.appendChild(document.createTextNode(timeStr));
+		msg.div.insertBefore(timeEl, msgEl);
+
+	} else if (updateDate) {
+		timeStr = msg.time.toLocaleDateString();
+		timeEl = document.createElement("div");
+		timeEl.className = "date status message";
+		timeEl.appendChild(document.createTextNode(timeStr));
+		msg.div.insertBefore(timeEl, msgEl);
 	}
 }
 
@@ -88,21 +202,21 @@ function receiveMessages(msgs) {
 		return a.time - b.time;
 	});
 	
-	var scrolledToBottom = (messagesEl.scrollTop + messagesEl.clientHeight ===
+	var isScrolledToBottom = (messagesEl.scrollTop + messagesEl.clientHeight ===
 		messagesEl.scrollHeight);
 	
 	msgs.forEach(function (msg) {
-		insertMessage(msg);
+		renderMessage(msg);
 	});
 	
-	if (scrolledToBottom) {
-		// keep it at the bottom
+	if (isScrolledToBottom) {
+		// then keep it at the bottom
 		messagesEl.scrollTop = messagesEl.scrollHeight;
 	}
 }
 	
 function stateUpdated() {
-	var keys, key, value, i, l, j, msgs, msg;
+	var keys, key, value, i, l, j, msgs, msg, pid;
 	
 	if (!participantsLoaded) {
 		// participants are not yet loaded.
@@ -118,16 +232,24 @@ function stateUpdated() {
 	j = 0;
 	msgs = Array(l);
 	
-	// for each state item
+	// for each state item:
 	for (i = 0; i < l; i++) {
 		key = keys[i];
 		value = state.get(key);
-		if (value && !messagesReceived[key]) {
+		
+		if (!value) continue;
+		
+		if (!messagesReceived[key] && !isNaN(key)) {
 			// New message
 			msg = JSON.parse(value);
 			msg.key = key;
 			msg.time = new Date(parseInt(key, 10));
 			msgs[j++] = msg;
+			
+		} else if (key.indexOf("p_") === 0) {
+			// A participant is in the chat.
+			pid = key.substr(2);
+			chatParticipants[pid] = true;
 		}
 	}
 	
@@ -143,6 +265,31 @@ function participantsUpdated() {
 			stateUpdated();
 		}
 	}
+	
+	// Look for new participants.
+	wave.getParticipants().forEach(function (participant) {
+		var pid = participant.getId();
+		// Each wave participant should be marked as being in the chat
+		// by the state key "p_" + their id.
+		
+		// If a participant is new and doesn't have this mark,
+		if (!chatParticipants[pid]) {
+		
+			// notify everyone of their entrance.
+			sendEntrance(pid);
+		}
+	});
+	
+	// Look for gone participants.
+	for (var pid in chatParticipants) {
+		// If a participant has left, or is marked in the state but
+		// is no longer a participant,
+		if (!wave.getParticipantById(pid)) {
+		
+			// notify everyone of their exit
+			sendExit(pid);
+		}
+	}
 }
 
 function gadgetLoad() {
@@ -155,7 +302,7 @@ function gadgetLoad() {
 		return setTimeout(arguments.callee, 10);
 	}
 	
-	formEl.onsubmit = sendMessage;
+	formEl.onsubmit = sendChatMessage;
 
 	// Set up wave callbacks
 	if (wave && wave.isInWaveContainer()) {
