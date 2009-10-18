@@ -104,11 +104,7 @@ function renderMessage(msg) {
 	if (pid !== undefined) {
 		sender = wave.getParticipantById(pid);
 		if (sender) {
-			if (pid === viewerId) {
-				name = "me";
-			} else {
-				name = sender.getDisplayName();
-			}
+			name = sender.getDisplayName();
 		} else {
 			name = pid;
 		}
