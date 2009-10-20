@@ -70,6 +70,8 @@ function sendEntrance(pid) {
 	obj["p_" + pid] = "1";
 	state.submitDelta(obj);
 	
+	chatParticipants[pid] = true;
+	
 	// add a message for the participant's entrance.
 	sendMessage({
 		p: pid,
@@ -256,36 +258,47 @@ function participantsUpdated() {
 	if (!viewerId) {
 		var viewer = wave.getViewer();
 		if (viewer) {
+			// First participant update.
 			viewerId = viewer && viewer.getId();
 			participantsLoaded = true;
 			stateUpdated();
 		}
-	}
-	
-	// Look for new participants.
-	wave.getParticipants().forEach(function (participant) {
-		var pid = participant.getId();
-		// Each wave participant should be marked as being in the chat
-		// by the state key "p_" + their id.
-		
-		// If a participant is new and doesn't have this mark,
-		if (!chatParticipants[pid]) {
-		
-			// notify everyone of their entrance.
-			sendEntrance(pid);
-		}
-	});
-	
-	// Look for gone participants.
-	for (var pid in chatParticipants) {
-		// If a participant has left, or is marked in the state but
-		// is no longer a participant,
-		if (!wave.getParticipantById(pid)) {
-		
-			// notify everyone of their exit
-			sendExit(pid);
+
+		// Announce our entrance
+		if (!chatParticipants[viewerId]) {
+			sendEntrance(viewerId);
 		}
 	}
+	
+	// delay to give time for new participants to announce themselves
+	setTimeout(function () {
+	
+		// Look for new participants.
+		wave.getParticipants().forEach(function (participant) {
+			var pid = participant.getId();
+			// Each wave participant should be marked as being in the chat
+			// by the state key "p_" + their id.
+			
+			// If a participant is new and doesn't have this mark,
+			if (!chatParticipants[pid]) {
+			
+				// notify everyone of their entrance.
+				sendEntrance(pid);
+			}
+		});
+		
+		// Look for gone participants.
+		for (var pid in chatParticipants) {
+			// If a participant has left, or is marked in the state but
+			// is no longer a participant,
+			if (!wave.getParticipantById(pid)) {
+			
+				// notify everyone of their exit
+				sendExit(pid);
+			}
+		}
+		
+	}, 3000);
 }
 
 function gadgetLoad() {
