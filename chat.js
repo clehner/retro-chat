@@ -94,14 +94,9 @@ function sendExit(pid) {
 	});
 }
 
-function renderMessage(msg) {
-	var pid, sender, name, title, msgEl, nameEl, text1, text2, name2, i, l,
-		prevMsg, timeEl, timeStr;
+function renderMessageSender(msg) {
+	var pid, sender, name, name2, text1, text2;
 	
-	// record receiving this message, so it is not re-rendered.
-	messagesReceived[msg.key] = true;
-	
-	// build dom nodes for message
 	pid = msg.p;
 	if (pid !== undefined) {
 		sender = wave.getParticipantById(pid);
@@ -113,39 +108,64 @@ function renderMessage(msg) {
 	} else {
 		name = "?";
 	}
-	
-	name2 = name + " (" + pid + ")";
-	title = name2 + " on " + msg.time.toLocaleString();
 
-	msgEl = document.createElement("div");
-	msgEl.title = title;
-	msgEl.className = "message";
+	name2 = name + " (" + pid + ")";
 	
-	msg.div = document.createElement("div");
-	msg.div.appendChild(msgEl);
-	
-	thumbEl = document.createElement("img");
-	thumbEl.src = sender ? sender.getThumbnailUrl() :
-		"https://wave.google.com/wave/static/images/unknown.gif";
-	msgEl.appendChild(thumbEl);
+	text2 = "";
 	
 	if (msg.msg) {
 		text1 = name + ":";
 		text2 = msg.msg;
 	} else if (msg.enter) {
 		text1 = name2 + " entered.";
-		msgEl.className += " status";
 	} else if (msg.exit) {
 		text1 = name + " exited.";
-		msgEl.className += " status";
 	}
+	
+	msg.text1.nodeValue = text1;
+	msg.text2.nodeValue = text2;
+	msg.msgEl.title = name2 + " on " + msg.time.toLocaleString();
+	msg.thumbEl.src = sender ? sender.getThumbnailUrl() :
+		"https://wave.google.com/wave/static/images/unknown.gif";
+}
+
+function renderMessage(msg) {
+	var msgEl, nameEl, text1, text2, i, l, prevMsg, timeEl, timeStr;
+	
+	// record receiving this message so it is not re-rendered.
+	messagesReceived[msg.key] = true;
+	
+	// Build dom nodes for message
+	msgEl = msg.msgEl = document.createElement("div");
+	msgEl.className = "message";
+	
+	thumbEl = msg.thumbEl = document.createElement("img");
+	msgEl.appendChild(thumbEl);
+	
+	msg.div = document.createElement("div");
+	msg.div.appendChild(msgEl);
 		
 	nameEl = document.createElement("span");
-	nameEl.appendChild(document.createTextNode(text1));
 	msgEl.appendChild(nameEl);
 	
-	if (text2) {
-		msgEl.appendChild(document.createTextNode(text2));
+	msg.text1 = document.createTextNode("");
+	nameEl.appendChild(msg.text1);
+	
+	msg.text2 = document.createTextNode("");
+	msgEl.appendChild(msg.text2);
+
+	if (msg.enter || msg.exit) {
+		msgEl.className += " status";
+	}
+	
+	renderMessageSender(msg);
+	
+	// If the message was sent before the participant, try to render it after
+	// the participant's info is available.
+	if (!wave.getParticipantById(msg.p)) {
+		setTimeout(function () {
+			renderMessageSender(msg);
+		}, 10);
 	}
 	
 	// find the last message older than this one
