@@ -108,8 +108,12 @@ function renderMessageSender(msg) {
 	} else {
 		name = "?";
 	}
-
-	name2 = name + " (" + pid + ")";
+	
+	if (name == pid) {
+		name2 = name;
+	} else {
+		name2 = name + " (" + pid + ")";
+	}
 	
 	text2 = "";
 	
