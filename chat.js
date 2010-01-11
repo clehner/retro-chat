@@ -1,3 +1,4 @@
+/*global window, document, wave, setTimeout*/
 /*
 Retro Chat
 A chat room Google Wave gadget.
@@ -27,6 +28,7 @@ THE SOFTWARE.
 var
 	state,                 // Wave state
 	viewerId,              // Id of the viewing participant
+	viewerHasEntered = false,
 	participantsLoaded = false, // Has the first participant update been called
 	chatParticipants = {}, // Participants that are marked in the wave state as
 	                       // being in the chat.
@@ -37,18 +39,15 @@ var
 	messagesEl,
 	inputEl;
 
-
 // send a message object
 function sendMessage(msg) {
-	
 	// make a unique key with a timestamp and a rand
-	var key = +new Date + "." + (~~(Math.random() * 9000) + 1000);
+	var key = +new Date() + "." + ~~(Math.random() * 9999);
 
-	var obj = {};
-	obj[key] = JSON.stringify(msg);
-	state.submitDelta(obj);
+	state.submitValue(key, JSON.stringify(msg));
 }
 
+// Send a chat or status message, JSON encoded, into the state.
 function sendChatMessage() {
 	// trim the message
 	var msg = inputEl.value.replace(/^\s+/, '').replace(/\s+$/, '');
@@ -64,26 +63,27 @@ function sendChatMessage() {
 	return false;
 }
 
-function sendEntrance(pid) {
-	// add the marker for the participant's presence in the chat
-	var obj = {};
-	obj["p_" + pid] = "1";
-	state.submitDelta(obj);
+function sendEntrance() {
+	if (viewerHasEntered) {
+		return;
+	}
 	
-	chatParticipants[pid] = true;
+	// add the marker for the viewer's presence in the chat
+	state.submitValue("p_" + viewerId, "1");
+	
+	chatParticipants[viewerId] = true;
+	viewerHasEntered = true;
 	
 	// add a message for the participant's entrance.
 	sendMessage({
-		p: pid,
+		p: viewerId,
 		enter: true
 	});
 }
 
 function sendExit(pid) {
 	// remove the participant from the state
-	var obj = {};
-	obj["p_" + pid] = null;
-	state.submitDelta(obj);
+	state.submitValue("p_" + pid, null);
 	
 	delete chatParticipants[pid];
 
@@ -95,27 +95,19 @@ function sendExit(pid) {
 }
 
 function renderMessageSender(msg) {
-	var pid, sender, name, name2, text1, text2;
-	
-	pid = msg.p;
-	if (pid !== undefined) {
-		sender = wave.getParticipantById(pid);
-		if (sender) {
-			name = sender.getDisplayName();
-		} else {
-			name = pid;
-		}
-	} else {
+	var pid = msg.p;
+	var name, sender;
+	if (pid === undefined) {
 		name = "?";
-	}
-	
-	if (name == pid) {
-		name2 = name;
 	} else {
-		name2 = name + " (" + pid + ")";
+		sender = wave.getParticipantById(pid);
+		name = sender ? sender.getDisplayName() : pid;
 	}
-	
-	text2 = "";
+
+	var name2 = (name == pid) ? name : name + " (" + pid + ")";
+
+	var text1;
+	var text2 = "";
 	
 	if (msg.msg) {
 		text1 = name + ":";
@@ -134,22 +126,20 @@ function renderMessageSender(msg) {
 }
 
 function renderMessage(msg) {
-	var msgEl, nameEl, text1, text2, i, l, prevMsg, timeEl, timeStr;
-	
 	// record receiving this message so it is not re-rendered.
 	messagesReceived[msg.key] = true;
 	
 	// Build dom nodes for message
-	msgEl = msg.msgEl = document.createElement("div");
+	var msgEl = msg.msgEl = document.createElement("div");
 	msgEl.className = "message";
 	
-	thumbEl = msg.thumbEl = document.createElement("img");
+	var thumbEl = msg.thumbEl = document.createElement("img");
 	msgEl.appendChild(thumbEl);
 	
 	msg.div = document.createElement("div");
 	msg.div.appendChild(msgEl);
 		
-	nameEl = document.createElement("span");
+	var nameEl = document.createElement("span");
 	msgEl.appendChild(nameEl);
 	
 	msg.text1 = document.createTextNode("");
@@ -173,9 +163,9 @@ function renderMessage(msg) {
 	}
 	
 	// find the last message older than this one
-	l = messages.length;
-	i = l;
-	prevMsg = messages[i-1];
+	var l = messages.length;
+	var i = l;
+	var prevMsg = messages[i-1];
 	while (i && (prevMsg.time > msg.time)) {
 		i--;
 		prevMsg = messages[i];
@@ -193,10 +183,12 @@ function renderMessage(msg) {
 	}
 	
 	// timestamp if more than 5 minutes passed since the last message.
-	updateTime = (!prevMsg || (msg.time - prevMsg.time > 5*60*1000));
+	var updateTime = (!prevMsg || (msg.time - prevMsg.time > 5*60*1000));
 	// datestamp if it is a different day than the last message.
-	updateDate = (!prevMsg || (msg.time.toDateString() != prevMsg.time.toDateString()));
+	var updateDate = (!prevMsg || (msg.time.toDateString() != prevMsg.time.toDateString()));
 	
+	var timeStr, timeEl;
+		
 	if (updateTime) {
 		if (updateDate) {
 			// both date and time stamp
@@ -236,10 +228,8 @@ function receiveMessages(msgs) {
 		messagesEl.scrollTop = messagesEl.scrollHeight;
 	}
 }
-	
+
 function stateUpdated() {
-	var keys, key, value, i, l, j, msgs, msg, pid;
-	
 	if (!participantsLoaded) {
 		// participants are not yet loaded.
 		return false;
@@ -249,29 +239,34 @@ function stateUpdated() {
 	if (!state) {
 		return;
 	}
-	keys = state.getKeys();
-	l = keys.length;
-	j = 0;
-	msgs = Array(l);
+	var keys = state.getKeys();
+	var l = keys.length;
+	var j = 0;
+	var msgs = Array(l);
 	
 	// for each state item:
-	for (i = 0; i < l; i++) {
-		key = keys[i];
-		value = state.get(key);
+	for (var i = 0; i < l; i++) {
+		var key = keys[i];
+		var value = state.get(key);
 		
-		if (!value) continue;
+		if (!value) {
+			continue;
+		}
 		
 		if (!messagesReceived[key] && !isNaN(key)) {
 			// New message
-			msg = JSON.parse(value);
+			var msg = JSON.parse(value);
 			msg.key = key;
 			msg.time = new Date(parseInt(key, 10));
 			msgs[j++] = msg;
 			
 		} else if (key.indexOf("p_") === 0) {
 			// A participant is in the chat.
-			pid = key.substr(2);
+			var pid = key.substr(2);
 			chatParticipants[pid] = true;
+			if (pid == viewerId) {
+				viewerHasEntered = true;
+			}
 		}
 	}
 	
@@ -287,42 +282,18 @@ function participantsUpdated() {
 			participantsLoaded = true;
 			stateUpdated();
 		}
+	}
 
-		// Announce our entrance
-		if (!chatParticipants[viewerId]) {
-			sendEntrance(viewerId);
+	// Look for gone participants.
+	for (var pid in chatParticipants) {
+		// We infer that participant has exited if it is marked in the state
+		// but is no longer a participant.
+		if (!wave.getParticipantById(pid)) {
+		
+			// notify everyone of their exit
+			sendExit(pid);
 		}
 	}
-	
-	// delay to give time for new participants to announce themselves
-	setTimeout(function () {
-	
-		// Look for new participants.
-		wave.getParticipants().forEach(function (participant) {
-			var pid = participant.getId();
-			// Each wave participant should be marked as being in the chat
-			// by the state key "p_" + their id.
-			
-			// If a participant is new and doesn't have this mark,
-			if (!chatParticipants[pid]) {
-			
-				// notify everyone of their entrance.
-				sendEntrance(pid);
-			}
-		});
-		
-		// Look for gone participants.
-		for (var pid in chatParticipants) {
-			// If a participant has left, or is marked in the state but
-			// is no longer a participant,
-			if (!wave.getParticipantById(pid)) {
-			
-				// notify everyone of their exit
-				sendExit(pid);
-			}
-		}
-		
-	}, 3000);
 }
 
 function gadgetLoad() {
@@ -335,6 +306,7 @@ function gadgetLoad() {
 		return setTimeout(arguments.callee, 10);
 	}
 	
+	inputEl.onkeypress = sendEntrance;
 	formEl.onsubmit = sendChatMessage;
 
 	// Set up wave callbacks
