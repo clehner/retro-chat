@@ -129,6 +129,18 @@ function renderMessage(msg) {
 	// record receiving this message so it is not re-rendered.
 	messagesReceived[msg.key] = true;
 	
+	var future = msg.time - new Date();
+	if (future > 0) {
+		// a message from the future!
+		if (future < 1e12) {
+			// near future
+			setTimeout(function () {
+				renderMessage(msg);
+			}, future);
+		}
+		return;
+	}
+	
 	// Build dom nodes for message
 	var msgEl = msg.msgEl = document.createElement("div");
 	msgEl.className = "message";
