@@ -1,7 +1,6 @@
-/*global window, document, wave, setTimeout*/
 /*
 Retro Chat
-A chat room Google Wave gadget.
+A Chat Room Google Wave gadget.
 
 Copyright (c) 2009 Charles Lehner
 
@@ -22,8 +21,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
 */
+
+/*global window, gadgets, document, wave, setTimeout */
 
 var
 	state,                 // Wave state
@@ -122,7 +122,7 @@ function renderMessageSender(msg) {
 	msg.text2.nodeValue = text2;
 	msg.msgEl.title = name2 + " on " + msg.time.toLocaleString();
 	msg.thumbEl.src = sender ? sender.getThumbnailUrl() :
-		"https://wave.google.com/wave/static/images/unknown.gif";
+		"https://wave.google.com/wave/static/images/unknown.jpg";
 }
 
 function renderMessage(msg) {
