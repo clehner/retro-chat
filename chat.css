@@ -35,7 +35,7 @@ body, #container, #messages, #input {
 	height: 20px;
 	width: 20px;
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAAJ0lEQVQ4jWNgGAWDBqSlpf0fNYwywygyfNQw0g0fNYx0wwevYdQAAMf0TuXxwQnOAAAAAElFTkSuQmCC) no-repeat center right;
-	-moz-user-select: none;
+	-moz-user-select: none; /* prevent image dragging in firefox */
 }
 
 
