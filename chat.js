@@ -38,14 +38,17 @@ var
 	formEl,
 	messagesEl,
 	inputEl,
-	resizer;
+	resizerEl;
 
-// send a message object
-function sendMessage(msg) {
+// send a message object, and optionally, other stuff
+function sendMessage(msg, delta) {
+	if (!delta) {
+		delta = {};
+	}
 	// make a unique key with a timestamp and a rand
 	var key = +new Date() + "." + ~~(Math.random() * 9999);
-
-	state.submitValue(key, JSON.stringify(msg));
+	delta[key] = JSON.stringify(msg);
+	state.submitValue(delta);
 }
 
 // Send a chat or status message, JSON encoded, into the state.
@@ -69,8 +72,9 @@ function sendEntrance() {
 		return;
 	}
 	
-	// add the marker for the viewer's presence in the chat
-	state.submitValue("p_" + viewerId, "1");
+	// add a marker for the viewer's presence in the chat
+	var delta = {};
+	delta["p_" + viewerId] = "1";
 	
 	chatParticipants[viewerId] = true;
 	viewerHasEntered = true;
@@ -79,7 +83,7 @@ function sendEntrance() {
 	sendMessage({
 		p: viewerId,
 		enter: true
-	});
+	}, delta);
 }
 
 function sendExit(pid) {
@@ -104,7 +108,7 @@ function Message(time, data) {
 }
 Message.prototype.getSender = function () {
 	return wave.getParticipantById(this.pid);
-}
+};
 Message.prototype.render = function render(data) {
 	var self = this;
 	var future = this.time - new Date();
@@ -231,7 +235,7 @@ Message.prototype.renderSender = function (msg) {
 };
 Message.prototype.remove = function () {
 	messagesEl.removeChild(this.div);
-}
+};
 
 
 function keepScroll(fn) {
@@ -347,7 +351,7 @@ function stateUpdated() {
 			delete rawState[key];
 		}
 	}
-	for (var key in newState) {
+	for (key in newState) {
 		if (newState[key] !== rawState[key]) {
 			var value = newState[key];
 			delta[key] = value;
@@ -384,7 +388,7 @@ function gadgetLoad() {
 	formEl = document.getElementById("container");
 	messagesEl = document.getElementById("messages");
 	inputEl = document.getElementById("input");
-	resizer = document.getElementById("resizer");
+	resizerEl = document.getElementById("resizer");
 	
 	// Wait for everything to be available
 	if (!formEl) {
@@ -393,7 +397,7 @@ function gadgetLoad() {
 	
 	inputEl.onkeypress = sendEntrance;
 	formEl.onsubmit = sendChatMessage;
-	resizer.onmousedown = onResizerMouseDown;
+	resizerEl.onmousedown = onResizerMouseDown;
 
 	// Set up wave callbacks
 	if (wave && wave.isInWaveContainer()) {
