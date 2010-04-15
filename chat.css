@@ -11,6 +11,7 @@ body, #container, #messages, #input {
 	font: 13px Arial, sans-serif;
 	border: 1px solid black;
 	background: white;
+	margin-bottom: 2px;
 }
 #messages {
 	position: absolute;
@@ -22,7 +23,6 @@ body, #container, #messages, #input {
 	top: auto;
 	height: 22px;
 	width: 100%;
-	display: block;
 	padding: 0;
 	border: none;
 	border-top: 1px solid black;
