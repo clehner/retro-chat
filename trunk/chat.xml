@@ -7,7 +7,7 @@
 		author="Charles Lehner"
 		author_email="gadgets@lehnerstudios.com">
 	 <Require feature="wave"/>
-	 <Require feature="wave"/>
+	 <Require feature="dynamic-height"/>
 	</ModulePrefs>
 
 	<Content type="html">
