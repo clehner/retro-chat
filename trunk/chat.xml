@@ -7,6 +7,7 @@
 		author="Charles Lehner"
 		author_email="gadgets@lehnerstudios.com">
 	 <Require feature="wave"/>
+	 <Require feature="wave"/>
 	</ModulePrefs>
 
 	<Content type="html">
@@ -15,7 +16,7 @@
 	<script type="text/javascript"
 		src="http://wave-api.appspot.com/public/wave.js"></script>
 	<script type="text/javascript"
-		src="http://wave-retro-chat.googlecode.com/svn/trunk/chat.js?2"></script>
+		src="http://wave-retro-chat.googlecode.com/svn/trunk/chat.js?3"></script>
 	<link rel="stylesheet" type="text/css"
 		href="http://wave-retro-chat.googlecode.com/svn/trunk/chat.css?1"/>
 	
