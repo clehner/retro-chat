@@ -257,7 +257,7 @@ function receiveMessages(msgs) {
 
 function renderHeight(height) {
 	formEl.style.height = height + "px";
-	gadgets.window.adjustHeight();
+	gadgets.window.adjustHeight(+height + 2); // plus 2 for border
 }
 
 var resizing = false;
