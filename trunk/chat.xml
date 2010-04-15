@@ -16,9 +16,9 @@
 	<script type="text/javascript"
 		src="http://wave-api.appspot.com/public/wave.js"></script>
 	<script type="text/javascript"
-		src="http://wave-retro-chat.googlecode.com/svn/trunk/chat.js?3"></script>
+		src="http://wave-retro-chat.googlecode.com/svn/trunk/chat.js"></script>
 	<link rel="stylesheet" type="text/css"
-		href="http://wave-retro-chat.googlecode.com/svn/trunk/chat.css?1"/>
+		href="http://wave-retro-chat.googlecode.com/svn/trunk/chat.css"/>
 	
 	<form id="container">
 		<div id="messages"></div>

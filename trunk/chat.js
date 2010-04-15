@@ -324,29 +324,29 @@ function receiveStateDelta(delta) {
 	}
 }
 
-var state = {};
+var rawState = {};
 function stateUpdated() {
+	state = wave.getState();
 	if (!participantsLoaded) {
 		// participants are not yet loaded.
 		return;
 	}
-	state = wave.getState();
 	if (!state || !state.state_) {
 		return;
 	}
 	var newState = state.state_;
 	var delta = {};
-	for (var key in state) {
+	for (var key in rawState) {
 		if (!(key in newState)) {
 			delta[key] = null;
-			delete state[key];
+			delete rawState[key];
 		}
 	}
 	for (var key in newState) {
-		if (newState[key] !== state[key]) {
+		if (newState[key] !== rawState[key]) {
 			var value = newState[key];
 			delta[key] = value;
-			state[key] = value;
+			rawState[key] = value;
 		}
 	}
 	receiveStateDelta(delta);
