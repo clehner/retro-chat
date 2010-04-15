@@ -33,7 +33,7 @@ var
 	chatParticipants = {}, // Participants that are marked in the wave state as
 	                       // being in the chat.
 	messages = [],         // Array of message objects
-	messagesByKey = [],
+	messagesByKey = {},
 
 	formEl,
 	messagesEl,
@@ -234,7 +234,13 @@ Message.prototype.renderSender = function (msg) {
 		"https://wave.google.com/wave/static/images/unknown.jpg";
 };
 Message.prototype.remove = function () {
-	messagesEl.removeChild(this.div);
+	if (this.div.parentNode == messagesEl) {
+		messagesEl.removeChild(this.div);
+	}
+	var i = messages.indexOf(this);
+	if (i != -1) {
+		messages.splice(i, 1);
+	}
 };
 
 
@@ -305,6 +311,7 @@ function receiveStateDelta(delta) {
 			if (msg) {
 				// remove previous message
 				msg.remove(msg);
+				delete messagesByKey[key];
 			}
 			if (value) {
 				// addd new message.
