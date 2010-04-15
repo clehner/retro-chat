@@ -234,30 +234,36 @@ Message.prototype.remove = function () {
 }
 
 
-function receiveMessages(msgs) {
-	// sort incoming messages by time sent, in ascending order.
-	msgs.sort(function (a, b) {
-		return a.time - b.time;
-	});
-	
+function keepScroll(fn) {
 	var isScrolledToBottom = (messagesEl.scrollHeight ===
 		messagesEl.scrollTop + messagesEl.clientHeight);
-	
-	msgs.forEach(function (msg) {
-		msg.render();
-	});
-	
+	fn();
 	if (isScrolledToBottom) {
 		// then keep it at the bottom
 		messagesEl.scrollTop = messagesEl.scrollHeight;
 	}
 }
 
+
+function receiveMessages(msgs) {
+	// sort incoming messages by time sent, in ascending order.
+	msgs.sort(function (a, b) {
+		return a.time - b.time;
+	});
+	keepScroll(function () {
+		msgs.forEach(function (msg) {
+			msg.render();
+		});
+	});
+}
+
 /* Resizer */
 
 function renderHeight(height) {
-	formEl.style.height = height + "px";
-	gadgets.window.adjustHeight(+height + 2); // plus 2 for border
+	keepScroll(function () {
+		formEl.style.height = height + "px";
+		gadgets.window.adjustHeight(+height + 2); // plus 2 for border
+	});
 }
 
 var resizing = false;
@@ -280,7 +286,6 @@ function onResizerMouseDown(e) {
 	}
 	window.addEventListener("mousemove", onMouseMove, false);
 	window.addEventListener("mouseup", onMouseUp, false);
-	//e.preventDefault(); // prevent image dragging in firefox
 }
 
 /* State stuff */
