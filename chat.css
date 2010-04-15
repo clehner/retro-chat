@@ -1,29 +1,25 @@
-#container {
+body, #container, #messages, #input {
 	position: absolute;
 	top: 0;
-	bottom: 0;
 	left: 0;
 	right: 0;
+	bottom: 0;
 	margin: 0;
+}
+#container {
+	position: absolute;
 	font: 13px Arial, sans-serif;
 	border: 1px solid black;
 	background: white;
 }
 #messages {
 	position: absolute;
-	top: 0;
 	bottom: 22px;
-	left: 0;
-	right: 0;
-	margin: 0;
 	overflow: auto;
 	padding: .4em;
 }
 #input {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
+	top: auto;
 	height: 22px;
 	width: 100%;
 	display: block;
@@ -32,6 +28,17 @@
 	border-top: 1px solid black;
 	font: 13px Arial, sans-serif;
 }
+#resizer {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	height: 20px;
+	width: 20px;
+	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAAJ0lEQVQ4jWNgGAWDBqSlpf0fNYwywygyfNQw0g0fNYx0wwevYdQAAMf0TuXxwQnOAAAAAElFTkSuQmCC) no-repeat center right;
+	-moz-user-select: none;
+}
+
+
 .message {
 	/*min-height: 27px;*/
 }
