@@ -22,6 +22,7 @@
 	<form id="container">
 		<div id="messages"></div>
 		<input id="input" />
+		<div id="resizer"></div>
 	</form>
 	
 	]]></Content>
