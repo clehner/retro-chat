@@ -33,11 +33,12 @@ var
 	chatParticipants = {}, // Participants that are marked in the wave state as
 	                       // being in the chat.
 	messages = [],         // Array of message objects
-	messagesReceived = {}, // keys of recieved messages
+	messagesByKey = [],
 
 	formEl,
 	messagesEl,
-	inputEl;
+	inputEl,
+	resizer;
 
 // send a message object
 function sendMessage(msg) {
@@ -94,133 +95,144 @@ function sendExit(pid) {
 	});
 }
 
-function renderMessageSender(msg) {
-	var pid = msg.p;
-	var name, sender;
-	if (pid === undefined) {
-		name = "?";
-	} else {
-		sender = wave.getParticipantById(pid);
-		name = sender ? sender.getDisplayName() : pid;
-	}
-
-	var name2 = (name == pid) ? name : name + " (" + pid + ")";
-
-	var text1;
-	var text2 = "";
-	
-	if (msg.msg) {
-		text1 = name + ":";
-		text2 = msg.msg;
-	} else if (msg.enter) {
-		text1 = name2 + " entered.";
-	} else if (msg.exit) {
-		text1 = name + " exited.";
-	}
-	
-	msg.text1.nodeValue = text1;
-	msg.text2.nodeValue = text2;
-	msg.msgEl.title = name2 + " on " + msg.time.toLocaleString();
-	msg.thumbEl.src = sender ? sender.getThumbnailUrl() :
-		"https://wave.google.com/wave/static/images/unknown.jpg";
+function Message(time, data) {
+	this.time = time;
+	this.text = data.msg;
+	this.pid = data.p;
+	this.isEntrance = data.enter;
+	this.isExit = data.exit;
 }
-
-function renderMessage(msg) {
-	// record receiving this message so it is not re-rendered.
-	messagesReceived[msg.key] = true;
-	
-	var future = msg.time - new Date();
+Message.prototype.getSender = function () {
+	return wave.getParticipantById(this.pid);
+}
+Message.prototype.render = function render(data) {
+	var self = this;
+	var future = this.time - new Date();
 	if (future > 0) {
 		// a message from the future!
 		if (future < 1e12) {
 			// near future
 			setTimeout(function () {
-				renderMessage(msg);
+				self.renderMessage();
 			}, future);
 		}
 		return;
 	}
 	
 	// Build dom nodes for message
-	var msgEl = msg.msgEl = document.createElement("div");
+	var msgEl = this.msgEl = document.createElement("div");
 	msgEl.className = "message";
 	
-	var thumbEl = msg.thumbEl = document.createElement("img");
+	var thumbEl = this.thumbEl = document.createElement("img");
 	msgEl.appendChild(thumbEl);
 	
-	msg.div = document.createElement("div");
-	msg.div.appendChild(msgEl);
+	this.div = document.createElement("div");
+	this.div.appendChild(msgEl);
 		
 	var nameEl = document.createElement("span");
 	msgEl.appendChild(nameEl);
 	
-	msg.text1 = document.createTextNode("");
-	nameEl.appendChild(msg.text1);
+	this.text1 = document.createTextNode("");
+	nameEl.appendChild(this.text1);
 	
-	msg.text2 = document.createTextNode("");
-	msgEl.appendChild(msg.text2);
+	this.text2 = document.createTextNode("");
+	msgEl.appendChild(this.text2);
 
-	if (msg.enter || msg.exit) {
+	if (this.isEntrance || this.isExit) {
 		msgEl.className += " status";
 	}
 	
-	renderMessageSender(msg);
-	
-	// If the message was sent before the participant, try to render it after
-	// the participant's info is available.
-	if (!wave.getParticipantById(msg.p)) {
-		setTimeout(function () {
-			renderMessageSender(msg);
-		}, 10);
-	}
+	this.renderSender();
 	
 	// find the last message older than this one
 	var l = messages.length;
 	var i = l;
 	var prevMsg = messages[i-1];
-	while (i && (prevMsg.time > msg.time)) {
+	while (i && (prevMsg.time > this.time)) {
 		i--;
 		prevMsg = messages[i];
 	}
 	
 	if (i == l) {
 		// message is newer than all the rest; insert it at the end.
-		messages[i] = msg;
-		messagesEl.appendChild(msg.div);
+		messages[i] = this;
+		messagesEl.appendChild(this.div);
 		
 	} else {
 		// insert message in the middle of the page, before message i
-		messages.splice(i, msg, 0);
-		messagesEl.insertBefore(msg.div, messages[i].div);
+		messages.splice(i, this, 0);
+		messagesEl.insertBefore(this.div, messages[i].div); // prevMsg?
 	}
 	
 	// timestamp if more than 5 minutes passed since the last message.
-	var updateTime = (!prevMsg || (msg.time - prevMsg.time > 5*60*1000));
+	var updateTime = (!prevMsg || (this.time - prevMsg.time > 5*60*1000));
 	// datestamp if it is a different day than the last message.
-	var updateDate = (!prevMsg || (msg.time.toDateString() != prevMsg.time.toDateString()));
+	var updateDate = (!prevMsg || (this.time.toDateString() != prevMsg.time.toDateString()));
 	
 	var timeStr, timeEl;
 		
 	if (updateTime) {
 		if (updateDate) {
 			// both date and time stamp
-			timeStr = msg.time.toLocaleString();
+			timeStr = this.time.toLocaleString();
 		} else {
-			timeStr = msg.time.toLocaleTimeString();
+			timeStr = this.time.toLocaleTimeString();
 		}
 		timeEl = document.createElement("div");
 		timeEl.className = "time status message";
 		timeEl.appendChild(document.createTextNode(timeStr));
-		msg.div.insertBefore(timeEl, msgEl);
+		this.div.insertBefore(timeEl, msgEl);
 
 	} else if (updateDate) {
-		timeStr = msg.time.toLocaleDateString();
+		timeStr = this.time.toLocaleDateString();
 		timeEl = document.createElement("div");
 		timeEl.className = "date status message";
 		timeEl.appendChild(document.createTextNode(timeStr));
-		msg.div.insertBefore(timeEl, msgEl);
+		this.div.insertBefore(timeEl, msgEl);
 	}
+};
+Message.prototype.renderSender = function (msg) {
+	var name, sender;
+	if (this.pid) {
+		sender = this.getSender();
+		// If the message was sent before the participant, try to render
+		// it after the participant's info is available.
+		if (!sender) {
+			var self = this;
+			setTimeout(function () {
+				self.renderSender();
+			}, 10);
+			return;
+		}
+		name = sender ? sender.getDisplayName() : this.pid;
+	} else {
+		name = "?";
+	}
+
+	var name2 = (name == this.pid) ? name : name + " (" + this.pid + ")";
+
+	var text1;
+	var text2 = "";
+	
+	if (this.text) {
+		text1 = name + ":";
+		text2 = this.text;
+	} else if (this.isEntrance) {
+		text1 = name2 + " entered.";
+	} else if (this.isExit) {
+		text1 = name + " exited.";
+	}
+	
+	this.text1.nodeValue = text1;
+	this.text2.nodeValue = text2;
+	this.msgEl.title = name2 + " on " + this.time.toLocaleString();
+	this.thumbEl.src = sender ? sender.getThumbnailUrl() :
+		"https://wave.google.com/wave/static/images/unknown.jpg";
+};
+Message.prototype.remove = function () {
+	messagesEl.removeChild(this.div);
 }
+
 
 function receiveMessages(msgs) {
 	// sort incoming messages by time sent, in ascending order.
@@ -228,11 +240,11 @@ function receiveMessages(msgs) {
 		return a.time - b.time;
 	});
 	
-	var isScrolledToBottom = (messagesEl.scrollTop + messagesEl.clientHeight ===
-		messagesEl.scrollHeight);
+	var isScrolledToBottom = (messagesEl.scrollHeight ===
+		messagesEl.scrollTop + messagesEl.clientHeight);
 	
 	msgs.forEach(function (msg) {
-		renderMessage(msg);
+		msg.render();
 	});
 	
 	if (isScrolledToBottom) {
@@ -241,48 +253,103 @@ function receiveMessages(msgs) {
 	}
 }
 
+/* Resizer */
+
+function renderHeight(height) {
+	formEl.style.height = height + "px";
+	gadgets.window.adjustHeight();
+}
+
+var resizing = false;
+function onResizerMouseDown(e) {
+	if (resizing) {
+		return false;
+	}
+	resizing = true;
+	var startY = formEl.clientHeight - e.clientY;
+	function onMouseMove(e) {
+		var height = startY + e.clientY;
+		renderHeight(height);
+	}
+	function onMouseUp(e) {
+		resizing = false;
+		window.removeEventListener("mousemove", onMouseMove, false);
+		window.removeEventListener("mouseup", onMouseUp, false);
+		var height = startY + e.clientY;
+		state.submitValue("height", height);
+	}
+	window.addEventListener("mousemove", onMouseMove, false);
+	window.addEventListener("mouseup", onMouseUp, false);
+	//e.preventDefault(); // prevent image dragging in firefox
+}
+
+/* State stuff */
+
+function receiveStateDelta(delta) {
+	var newMessages = [];
+	var i = 0;
+	for (var key in delta) {
+		var value = delta[key];
+		if (!isNaN(key)) {
+			// it is a message.
+			var msg = messagesByKey[key];
+			if (msg) {
+				// remove previous message
+				msg.remove(msg);
+			}
+			if (value) {
+				// addd new message.
+				var time = new Date(parseInt(key, 10));
+				msg = new Message(time, JSON.parse(value));
+				messagesByKey[key] = msg;
+				newMessages[i++] = msg;
+			}
+		} else if (key.indexOf("p_") === 0) {
+			// A participant has entered or left the chat.
+			var pid = key.substr(2);
+			if (value) {
+				chatParticipants[pid] = true;
+			} else {
+				delete chatParticipants[pid];
+			}
+			if (pid == viewerId) {
+				viewerHasEntered = chatParticipants[pid];
+			}
+		} else if (key == "height") {
+			renderHeight(value);
+		}
+	}
+	if (i) {
+		receiveMessages(newMessages);
+	}
+}
+
+var state = {};
 function stateUpdated() {
 	if (!participantsLoaded) {
 		// participants are not yet loaded.
-		return false;
-	}
-	
-	state = wave.getState();
-	if (!state) {
 		return;
 	}
-	var keys = state.getKeys();
-	var l = keys.length;
-	var j = 0;
-	var msgs = Array(l);
-	
-	// for each state item:
-	for (var i = 0; i < l; i++) {
-		var key = keys[i];
-		var value = state.get(key);
-		
-		if (!value) {
-			continue;
-		}
-		
-		if (!messagesReceived[key] && !isNaN(key)) {
-			// New message
-			var msg = JSON.parse(value);
-			msg.key = key;
-			msg.time = new Date(parseInt(key, 10));
-			msgs[j++] = msg;
-			
-		} else if (key.indexOf("p_") === 0) {
-			// A participant is in the chat.
-			var pid = key.substr(2);
-			chatParticipants[pid] = true;
-			if (pid == viewerId) {
-				viewerHasEntered = true;
-			}
+	state = wave.getState();
+	if (!state || !state.state_) {
+		return;
+	}
+	var newState = state.state_;
+	var delta = {};
+	for (var key in state) {
+		if (!(key in newState)) {
+			delta[key] = null;
+			delete state[key];
 		}
 	}
-	
-	receiveMessages(msgs);
+	for (var key in newState) {
+		if (newState[key] !== state[key]) {
+			var value = newState[key];
+			delta[key] = value;
+			state[key] = value;
+		}
+	}
+	receiveStateDelta(delta);
 }
 
 function participantsUpdated() {
@@ -312,14 +379,16 @@ function gadgetLoad() {
 	formEl = document.getElementById("container");
 	messagesEl = document.getElementById("messages");
 	inputEl = document.getElementById("input");
+	resizer = document.getElementById("resizer");
 	
 	// Wait for everything to be available
 	if (!formEl) {
-		return setTimeout(arguments.callee, 10);
+		return setTimeout(gadgetLoad, 10);
 	}
 	
 	inputEl.onkeypress = sendEntrance;
 	formEl.onsubmit = sendChatMessage;
+	resizer.onmousedown = onResizerMouseDown;
 
 	// Set up wave callbacks
 	if (wave && wave.isInWaveContainer()) {
