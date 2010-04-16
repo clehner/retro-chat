@@ -48,7 +48,7 @@ function sendMessage(msg, delta) {
 	// make a unique key with a timestamp and a rand
 	var key = +new Date() + "." + ~~(Math.random() * 9999);
 	delta[key] = JSON.stringify(msg);
-	state.submitValue(delta);
+	state.submitDelta(delta);
 }
 
 // Send a chat or status message, JSON encoded, into the state.
@@ -314,7 +314,7 @@ function receiveStateDelta(delta) {
 				delete messagesByKey[key];
 			}
 			if (value) {
-				// addd new message.
+				// add new message.
 				var time = new Date(parseInt(key, 10));
 				msg = new Message(time, JSON.parse(value));
 				messagesByKey[key] = msg;
@@ -381,8 +381,8 @@ function participantsUpdated() {
 
 	// Look for gone participants.
 	for (var pid in chatParticipants) {
-		// We infer that participant has exited if it is marked in the state
-		// but is no longer a participant.
+		// We infer that a participant has exited if its presence is marked
+		// in the state but is not in the participants list.
 		if (!wave.getParticipantById(pid)) {
 		
 			// notify everyone of their exit
