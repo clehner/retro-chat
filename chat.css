@@ -15,12 +15,12 @@ body, #container, #messages, #input {
 }
 #messages {
 	position: absolute;
-	bottom: 22px;
+	bottom: 0;
 	overflow: auto;
 	padding: .4em;
 }
-.readonly #messages {
-	bottom: 0;
+.edit-mode #messages {
+	bottom: 22px;
 }
 #input {
 	top: auto;
@@ -30,6 +30,7 @@ body, #container, #messages, #input {
 	border: none;
 	border-top: 1px solid black;
 	font: 13px Arial, sans-serif;
+	display: none;
 }
 #resizer {
 	position: absolute;
@@ -39,9 +40,10 @@ body, #container, #messages, #input {
 	width: 20px;
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAAJ0lEQVQ4jWNgGAWDBqSlpf0fNYwywygyfNQw0g0fNYx0wwevYdQAAMf0TuXxwQnOAAAAAElFTkSuQmCC) no-repeat center right;
 	-moz-user-select: none; /* prevent image dragging in firefox */
-}
-.readonly #input, .readonly #resizer {
 	display: none;
+}
+.edit-mode #input, .edit-mode #resizer {
+	display: block;
 }
 
 #tooltip {
@@ -54,7 +56,7 @@ body, #container, #messages, #input {
 	border: 1px solid #888;
 	border-radius: 10px;
 }
-.mode-view #tooltip.visible {
+.view-mode #tooltip.visible {
 	display: block;
 }
 

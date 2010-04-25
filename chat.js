@@ -431,9 +431,9 @@ function participantsUpdated() {
 
 function modeChanged(mode) {
 	var className =
-		mode == wave.Mode.VIEW ? "readonly mode-view" :
-		mode == wave.Mode.EDIT ? "mode-edit" :
-		mode == wave.Mode.PLAYBACK ? "readonly mode-playback" : "";
+		mode == wave.Mode.VIEW ? "view-mode" :
+		mode == wave.Mode.EDIT ? "edit-mode" :
+		mode == wave.Mode.PLAYBACK ? "playback-mode" : "";
 	hideTooltip();
 	keepScroll(function () {
 		formEl.className = className;
