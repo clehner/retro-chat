@@ -32,13 +32,15 @@ var
 	participantsLoaded = false, // Has the first participant update been called
 	chatParticipants = {}, // Participants that are marked in the wave state as
 	                       // being in the chat.
+	resizing = false,
 	messages = [],         // Array of message objects
 	messagesByKey = {},
 
 	formEl,
 	messagesEl,
 	inputEl,
-	resizerEl;
+	resizerEl,
+	tooltipEl;
 
 // send a message object, and optionally, other stuff
 function sendMessage(msg, delta) {
@@ -276,7 +278,6 @@ function renderHeight(height) {
 	});
 }
 
-var resizing = false;
 function onResizerMouseDown(e) {
 	if (resizing) {
 		return false;
@@ -296,6 +297,43 @@ function onResizerMouseDown(e) {
 	}
 	window.addEventListener("mousemove", onMouseMove, false);
 	window.addEventListener("mouseup", onMouseUp, false);
+}
+
+/* Tooltip */
+
+function hideTooltip() {
+	if (!tooltipEl) { return; }
+	tooltipEl.className = "";
+}
+
+function getMouseOffset(element, e) {
+	var x = 0, y = 0;
+	do {
+		x += element.offsetLeft;
+		y += element.offsetTop;
+	} while (element = element.offsetParent);
+	return {
+		x: e.pageX - x,
+		y: e.pageY - y
+	};
+}
+
+function onDoubleClick(e) {
+	if (wave.getMode() != wave.Mode.VIEW) { return; }
+	var pos = getMouseOffset(formEl, e);
+	if (!tooltipEl) { return; }
+	var w = 270;
+	var h = 40;
+	var x = Math.max(0, Math.min(formEl.offsetWidth - w, pos.x - w/2));
+	var y = Math.max(0, Math.min(formEl.offsetHeight - h, pos.y));
+	tooltipEl.style.left = x + "px";
+	tooltipEl.style.top = y + "px";
+	tooltipEl.className = "visible";
+	// When there is a mousedown outside the tooltip, hide it.
+	messagesEl.addEventListener("mousedown", function onMouseDown() {
+		hideTooltip();
+		this.removeEventListener("mousedown", onMouseDown, false);
+	}, true);
 }
 
 /* State stuff */
@@ -391,11 +429,23 @@ function participantsUpdated() {
 	}
 }
 
+function modeChanged(mode) {
+	var className =
+		mode == wave.Mode.VIEW ? "readonly mode-view" :
+		mode == wave.Mode.EDIT ? "mode-edit" :
+		mode == wave.Mode.PLAYBACK ? "readonly mode-playback" : "";
+	hideTooltip();
+	keepScroll(function () {
+		formEl.className = className;
+	});
+}
+
 function gadgetLoad() {
 	formEl = document.getElementById("container");
 	messagesEl = document.getElementById("messages");
 	inputEl = document.getElementById("input");
 	resizerEl = document.getElementById("resizer");
+	tooltipEl = document.getElementById("tooltip");
 	
 	// Wait for everything to be available
 	if (!formEl) {
@@ -404,12 +454,14 @@ function gadgetLoad() {
 	
 	inputEl.onkeypress = sendEntrance;
 	formEl.onsubmit = sendChatMessage;
+	formEl.ondblclick = onDoubleClick;
 	resizerEl.onmousedown = onResizerMouseDown;
 
 	// Set up wave callbacks
 	if (wave && wave.isInWaveContainer()) {
 		wave.setStateCallback(stateUpdated);
 		wave.setParticipantCallback(participantsUpdated);
+		wave.setModeCallback(modeChanged);
 	}
 	
 	inputEl.focus();

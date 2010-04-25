@@ -11,12 +11,16 @@ body, #container, #messages, #input {
 	font: 13px Arial, sans-serif;
 	border: 1px solid black;
 	background: white;
+	overflow: hidden;
 }
 #messages {
 	position: absolute;
 	bottom: 22px;
 	overflow: auto;
 	padding: .4em;
+}
+.readonly #messages {
+	bottom: 0;
 }
 #input {
 	top: auto;
@@ -35,6 +39,23 @@ body, #container, #messages, #input {
 	width: 20px;
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAAJ0lEQVQ4jWNgGAWDBqSlpf0fNYwywygyfNQw0g0fNYx0wwevYdQAAMf0TuXxwQnOAAAAAElFTkSuQmCC) no-repeat center right;
 	-moz-user-select: none; /* prevent image dragging in firefox */
+}
+.readonly #input, .readonly #resizer {
+	display: none;
+}
+
+#tooltip {
+	display: none;
+	position: absolute;
+	text-align: center;
+	width: 260px;
+	padding: 3px;
+	background-color: #FFC;
+	border: 1px solid #888;
+	border-radius: 10px;
+}
+.mode-view #tooltip.visible {
+	display: block;
 }
 
 
