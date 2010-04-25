@@ -52,8 +52,8 @@ body, #container, #messages, #input {
 	text-align: center;
 	width: 260px;
 	padding: 3px;
-	background-color: #FFC;
-	border: 1px solid #888;
+	background-color: #fefdd5;
+	border: 1px solid #a4a274;
 	border-radius: 10px;
 }
 .view-mode #tooltip.visible {
