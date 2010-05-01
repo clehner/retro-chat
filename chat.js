@@ -272,6 +272,7 @@ function receiveMessages(msgs) {
 /* Resizer */
 
 function renderHeight(height) {
+	height = Math.max(height, 30);
 	keepScroll(function () {
 		formEl.style.height = height + "px";
 		gadgets.window.adjustHeight(+height + 2); // plus 2 for border
@@ -323,7 +324,7 @@ function onDoubleClick(e) {
 	var pos = getMouseOffset(formEl, e);
 	if (!tooltipEl) { return; }
 	var w = 270;
-	var h = 40;
+	var h = 44;
 	var x = Math.max(0, Math.min(formEl.offsetWidth - w, pos.x - w/2));
 	var y = Math.max(0, Math.min(formEl.offsetHeight - h, pos.y));
 	tooltipEl.style.left = x + "px";

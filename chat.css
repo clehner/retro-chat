@@ -39,7 +39,6 @@ body, #container, #messages, #input {
 	height: 20px;
 	width: 20px;
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAAJ0lEQVQ4jWNgGAWDBqSlpf0fNYwywygyfNQw0g0fNYx0wwevYdQAAMf0TuXxwQnOAAAAAElFTkSuQmCC) no-repeat center right;
-	-moz-user-select: none; /* prevent image dragging in firefox */
 	display: none;
 }
 .edit-mode #input, .edit-mode #resizer {
@@ -51,7 +50,7 @@ body, #container, #messages, #input {
 	position: absolute;
 	text-align: center;
 	width: 260px;
-	padding: 3px;
+	padding: 5px;
 	background-color: #fefdd5;
 	border: 1px solid #a4a274;
 	border-radius: 10px;
