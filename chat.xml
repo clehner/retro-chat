@@ -24,8 +24,6 @@
 		<div id="messages"></div>
 		<input id="input" />
 		<div id="resizer"><span></span></div>
-		<div id="tooltip">You are in view mode.<br/>
-		To send chats, put the wave in edit mode.</div>
 	</form>
 	
 	]]></Content>
