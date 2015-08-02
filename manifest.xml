@@ -1,10 +1,10 @@
 <extension 
     name="Retro Chat"
     description="Chat room gadget for old-fashioned IMing in Wave."
-    thumbnailUrl="http://wave-retro-chat.googlecode.com/svn/trunk/thumbnail-128x128.png">
+    thumbnailUrl="http://celehner.com/gadgets/retro-chat/images/thumbnail-128x128.png">
   <author name="Charles Lehner"/>
   <menuHook location="toolbar" text="Insert a chat gadget." 
-      iconUrl="http://wave-retro-chat.googlecode.com/svn/trunk/icon.png">
-    <insertGadget url="http://wave-retro-chat.googlecode.com/svn/trunk/chat.xml"/>
+      iconUrl="http://celehner.com/gadgets/retro-chat/images/icon.png">
+    <insertGadget url="http://celehner.com/gadgets/retro-chat/chat.xml"/>
   </menuHook>
 </extension>

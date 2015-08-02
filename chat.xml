@@ -4,6 +4,7 @@
 		title="Retro Chat"
 		height="200"
 		description="A chat room Wave gadget for old-fashioned IM chatting."
+		screenshot="//celehner.com/gadgets/retro-chat/images/screenshot.png"
 		author="Charles Lehner"
 		author_email="gadgets@lehnerstudios.com">
 	 <Require feature="wave"/>
@@ -12,14 +13,12 @@
 
 	<Content type="html">
 	<![CDATA[
-	
+
 	<script type="text/javascript"
-		src="http://wave-api.appspot.com/public/wave.js"></script>
-	<script type="text/javascript"
-		src="http://wave-retro-chat.googlecode.com/svn/trunk/chat.js"></script>
+		src="//celehner.com/gadgets/retro-chat/chat.js"></script>
 	<link rel="stylesheet" type="text/css"
-		href="http://wave-retro-chat.googlecode.com/svn/trunk/chat.css"/>
-	
+		href="//celehner.com/gadgets/retro-chat/chat.css"/>
+
 	<form id="container">
 		<div id="messages"></div>
 		<input id="input" />

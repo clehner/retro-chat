@@ -231,7 +231,7 @@ Message.prototype.renderSender = function (msg) {
 	this.text2.nodeValue = text2;
 	this.msgEl.title = name2 + " on " + this.time.toLocaleString();
 	this.thumbEl.src = sender ? sender.getThumbnailUrl() :
-		"https://wave.google.com/wave/static/images/unknown.jpg";
+		"//celehner.com/gadgets/participant.jpg";
 };
 Message.prototype.remove = function () {
 	if (this.div.parentNode == messagesEl) {
