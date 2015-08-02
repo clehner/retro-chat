@@ -14,8 +14,8 @@ Retro Chat can be used today on Rizzoma and Apache Wave.
 
 ## Links
 
-[Demo topic on Rizzoma](https://rizzoma.com/topic/01cfe6fa731b208304d9b48b59fc1e4d/)
-[Wave Extensions Gallery entry](https://wavygallery.appspot.com/gallery/info/ddbe5e239e50e85c)
+- [Demo topic on Rizzoma](https://rizzoma.com/topic/01cfe6fa731b208304d9b48b59fc1e4d/)
+- [Wave Extensions Gallery entry](https://wavygallery.appspot.com/gallery/info/ddbe5e239e50e85c)
 
 ## License
 
